@@ -16,6 +16,18 @@ class _VlsmPageState extends State<VlsmPage> {
   List<Map<String, dynamic>> subnetInputs = [];
   List<Map<String, String>> results = [];
 
+  // Validation Logic
+  bool isValidIP(String ip) {
+    List<String> parts = ip.split('.');
+    if (parts.length != 4) return false;
+    for (int i = 0; i < parts.length; i++) {
+      int? number = int.tryParse(parts[i]);
+      if (number == null || number < 0 || number > 255) return false;
+      if (i == 0 && number == 0) return false; // Block leading 0
+    }
+    return true;
+  }
+
   void addSubnet() {
     String name = nameController.text.trim();
     int? hosts = int.tryParse(hostController.text);
@@ -40,6 +52,14 @@ class _VlsmPageState extends State<VlsmPage> {
 
   void calculateVLSM() {
     results.clear();
+
+    // Validate the IP address
+    if (!isValidIP(baseIpController.text)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid Base IP Address")),
+      );
+      return;
+    }
 
     if (baseIpController.text.isEmpty || subnetInputs.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(

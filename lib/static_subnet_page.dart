@@ -15,10 +15,32 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
 
   List<Map<String, String>> subnetResults = [];
 
+  // Validation Logic
+  bool isValidIP(String ip) {
+    List<String> parts = ip.split('.');
+    if (parts.length != 4) return false;
+    for (int i = 0; i < parts.length; i++) {
+      int? number = int.tryParse(parts[i]);
+      if (number == null || number < 0 || number > 255) return false;
+      if (i == 0 && number == 0) return false; // Block leading 0
+    }
+    return true;
+  }
+
   void calculateSubnets() {
     subnetResults.clear();
 
     String baseIp = networkController.text.trim();
+ 
+    // 1. Validate the IP address
+
+    if (!isValidIP(baseIp)) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Invalid Base Network Address")),
+      );
+      return;
+    }
+    
     int? requiredHosts = int.tryParse(hostController.text);
     int? subnetCount = int.tryParse(subnetCountController.text);
 
