@@ -16,14 +16,28 @@ class _VlsmPageState extends State<VlsmPage> {
   List<Map<String, dynamic>> subnetInputs = [];
   List<Map<String, String>> results = [];
 
-  // Validation Logic
+  
+  int ipToInt(String ip) {
+    List<int> o = ip.split('.').map(int.parse).toList();
+    return (o[0] * 16777216) + (o[1] * 65536) + (o[2] * 256) + o[3];
+  }
+
+  String intToIp(int ipInt) {
+    int o1 = (ipInt ~/ 16777216) % 256;
+    int o2 = (ipInt ~/ 65536) % 256;
+    int o3 = (ipInt ~/ 256) % 256;
+    int o4 = ipInt % 256;
+    return '$o1.$o2.$o3.$o4';
+  }
+
+
   bool isValidIP(String ip) {
     List<String> parts = ip.split('.');
     if (parts.length != 4) return false;
     for (int i = 0; i < parts.length; i++) {
       int? number = int.tryParse(parts[i]);
       if (number == null || number < 0 || number > 255) return false;
-      if (i == 0 && number == 0) return false; // Block leading 0
+      if (i == 0 && number == 0) return false; 
     }
     return true;
   }
@@ -49,11 +63,19 @@ class _VlsmPageState extends State<VlsmPage> {
 
     setState(() {});
   }
+  
+  void clearList() {
+    setState(() {
+      subnetInputs.clear();
+      results.clear();
+      baseIpController.clear();
+    });
+  }
 
   void calculateVLSM() {
     results.clear();
 
-    // Validate the IP address
+
     if (!isValidIP(baseIpController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Invalid Base IP Address")),
@@ -68,17 +90,15 @@ class _VlsmPageState extends State<VlsmPage> {
       return;
     }
 
-    // Sorting
 
     subnetInputs.sort((a, b) => b["hosts"].compareTo(a["hosts"]));
 
-    List<String> octets = baseIpController.text.split(".");
-    int currentLastOctet = int.parse(octets[3]);
+    int currentIpInt = ipToInt(baseIpController.text.trim());
 
     for (var subnet in subnetInputs) {
       int hosts = subnet["hosts"];
 
-      // Calculate block size
+
       int bits = 0;
       while ((pow(2, bits) - 2) < hosts) {
         bits++;
@@ -87,25 +107,22 @@ class _VlsmPageState extends State<VlsmPage> {
       int blockSize = pow(2, bits).toInt();
       int usableHosts = blockSize - 2;
 
-      int networkLast = currentLastOctet;
-      int firstHostLast = networkLast + 1;
-      int lastHostLast = networkLast + usableHosts;
-      int broadcastLast = networkLast + blockSize - 1;
+      int networkInt = currentIpInt;
+      int firstHostInt = networkInt + 1;
+      int broadcastInt = networkInt + blockSize - 1;
+      int lastHostInt = broadcastInt - 1;
 
       results.add({
         "name": subnet["name"],
-        "network":
-            "${octets[0]}.${octets[1]}.${octets[2]}.$networkLast",
+        "network": intToIp(networkInt),
         "usable": usableHosts.toString(),
-        "first":
-            "${octets[0]}.${octets[1]}.${octets[2]}.$firstHostLast",
-        "last":
-            "${octets[0]}.${octets[1]}.${octets[2]}.$lastHostLast",
-        "broadcast":
-            "${octets[0]}.${octets[1]}.${octets[2]}.$broadcastLast",
+        "first": intToIp(firstHostInt),
+        "last": intToIp(lastHostInt),
+        "broadcast": intToIp(broadcastInt),
       });
 
-      currentLastOctet += blockSize;
+  
+      currentIpInt += blockSize;
     }
 
     setState(() {});
@@ -115,115 +132,134 @@ class _VlsmPageState extends State<VlsmPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("VLSM Calculator"),
+        title: const Text("VLSM Calculation"),
         centerTitle: true,
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-            // Base IP
-            TextField(
-              controller: baseIpController,
-              decoration: const InputDecoration(
-                labelText: "Base Network Address",
-                hintText: "e.g. 192.168.10.0",
-                border: OutlineInputBorder(),
-              ),
-            ),
-            const SizedBox(height: 20),
-
-            // Subnet input card
             Card(
               elevation: 4,
               child: Padding(
                 padding: const EdgeInsets.all(16),
                 child: Column(
                   children: [
-                    TextField(
-                      controller: nameController,
+                     TextField(
+                      controller: baseIpController,
                       decoration: const InputDecoration(
-                        labelText: "Subnet Name",
+                        labelText: "Base Network Address",
+                        hintText: "192.168.20.0",
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 10),
-                    TextField(
-                      controller: hostController,
-                      keyboardType: TextInputType.number,
-                      decoration: const InputDecoration(
-                        labelText: "Hosts Needed",
-                        border: OutlineInputBorder(),
-                      ),
+                    const SizedBox(height: 16),
+                    Row(
+                      children: [
+                        Expanded(
+                          flex: 2,
+                          child: TextField(
+                            controller: nameController,
+                            decoration: const InputDecoration(
+                              labelText: "Subnet Name",
+                              hintText: "e.g. HR Dept",
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          flex: 1,
+                          child: TextField(
+                            controller: hostController,
+                            keyboardType: TextInputType.number,
+                            decoration: const InputDecoration(
+                              labelText: "Hosts",
+                              hintText: "60",
+                              border: OutlineInputBorder(),
+                            ),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(height: 15),
+                    const SizedBox(height: 16),
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
                         onPressed: addSubnet,
-                        child: const Text("Add Subnet"),
+                        child: const Text("Add Subnet to List"),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
-
-            const SizedBox(height: 20),
-
-            // Added subnet list
+            const SizedBox(height: 10),
+            
+           
             if (subnetInputs.isNotEmpty)
               Card(
-                elevation: 3,
+                elevation: 2,
+                color: Colors.blue.shade50,
                 child: Column(
                   children: subnetInputs.map((s) {
                     return ListTile(
-                      title: Text(s["name"]),
-                      trailing: Text("Hosts: ${s["hosts"]}"),
+                      dense: true,
+                      leading: const Icon(Icons.lan, color: Colors.blue),
+                      title: Text(s["name"], style: const TextStyle(fontWeight: FontWeight.bold)),
+                      trailing: Text("${s["hosts"]} Hosts required"),
                     );
                   }).toList(),
                 ),
               ),
-
-            const SizedBox(height: 20),
-
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton(
-                onPressed: calculateVLSM,
-                child: const Text("Calculate VLSM"),
-              ),
+            
+            const SizedBox(height: 16),
+            
+          
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: clearList,
+                    child: const Text("Clear Data"),
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  flex: 2,
+                  child: FilledButton(
+                    onPressed: calculateVLSM,
+                    child: const Text("Calculate VLSM"),
+                  ),
+                ),
+              ],
             ),
-
+            
             const SizedBox(height: 25),
-
-            // Result Table
+            
+       
             if (results.isNotEmpty)
               Card(
-                elevation: 5,
+                elevation: 4,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
                     columns: const [
-                      DataColumn(label: Text("Subnet Name")),
-                      DataColumn(label: Text("Network")),
+                      DataColumn(label: Text("Network Name")),
+                      DataColumn(label: Text("Network Address")),
                       DataColumn(label: Text("Usable Hosts")),
                       DataColumn(label: Text("First ID")),
                       DataColumn(label: Text("Last ID")),
-                      DataColumn(label: Text("Broadcast")),
+                      DataColumn(label: Text("Broadcast ID")),
                     ],
-                    rows: results
-                        .map(
-                          (r) => DataRow(cells: [
-                            DataCell(Text(r["name"]!)),
-                            DataCell(Text(r["network"]!)),
-                            DataCell(Text(r["usable"]!)),
-                            DataCell(Text(r["first"]!)),
-                            DataCell(Text(r["last"]!)),
-                            DataCell(Text(r["broadcast"]!)),
-                          ]),
-                        )
-                        .toList(),
+                    rows: results.map((r) => DataRow(cells: [
+                      DataCell(Text(r["name"]!)),
+                      DataCell(Text(r["network"]!)),
+                      DataCell(Text(r["usable"]!)),
+                      DataCell(Text(r["first"]!)),
+                      DataCell(Text(r["last"]!)),
+                      DataCell(Text(r["broadcast"]!)),
+                    ])).toList(),
                   ),
                 ),
               ),

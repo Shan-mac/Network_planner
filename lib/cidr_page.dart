@@ -51,33 +51,31 @@ class _CidrPageState extends State<CidrPage> {
   }
 
 
-  // Validation Logic
   bool isValidIP(String ip) {
     List<String> parts = ip.split('.');
     if (parts.length != 4) return false;
     for (int i = 0; i < parts.length; i++) {
       int? number = int.tryParse(parts[i]);
       if (number == null || number < 0 || number > 255) return false;
-      if (i == 0 && number == 0) return false; 
+      if (i == 0 && number == 0) return false;
     }
     return true;
   }
 
-  // Main Calculation
+ 
   void calculateCidr() {
-
-    // Validate the IP address
+  
     if (ipController.text.isEmpty || !isValidIP(ipController.text)) {
-       ScaffoldMessenger.of(context).showSnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Enter a valid IP (e.g. 192.168.1.1)")),
       );
       return;
     }
 
     if (cidrController.text.isEmpty) {
-       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter CIDR")),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(const SnackBar(content: Text("Please enter CIDR")));
       return;
     }
 

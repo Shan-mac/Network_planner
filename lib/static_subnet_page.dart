@@ -9,83 +9,83 @@ class StaticSubnetPage extends StatefulWidget {
 }
 
 class _StaticSubnetPageState extends State<StaticSubnetPage> {
-  final TextEditingController networkController = TextEditingController();
-  final TextEditingController hostController = TextEditingController();
-  final TextEditingController subnetCountController = TextEditingController();
+  final TextEditingController baseIpController = TextEditingController();
+  final TextEditingController hostsController = TextEditingController();
+  final TextEditingController subnetsController = TextEditingController();
 
-  List<Map<String, String>> subnetResults = [];
+  List<Map<String, String>> results = [];
 
-  // Validation Logic
+
+  int ipToInt(String ip) {
+    List<int> o = ip.split('.').map(int.parse).toList();
+
+    return (o[0] * 16777216) + (o[1] * 65536) + (o[2] * 256) + o[3];
+  }
+
+  String intToIp(int ipInt) {
+    int o1 = (ipInt ~/ 16777216) % 256;
+    int o2 = (ipInt ~/ 65536) % 256;
+    int o3 = (ipInt ~/ 256) % 256;
+    int o4 = ipInt % 256;
+    return '$o1.$o2.$o3.$o4';
+  }
+
   bool isValidIP(String ip) {
     List<String> parts = ip.split('.');
     if (parts.length != 4) return false;
     for (int i = 0; i < parts.length; i++) {
       int? number = int.tryParse(parts[i]);
       if (number == null || number < 0 || number > 255) return false;
-      if (i == 0 && number == 0) return false; // Block leading 0
+      if (i == 0 && number == 0) return false;
     }
     return true;
   }
 
   void calculateSubnets() {
-    subnetResults.clear();
+    String ip = baseIpController.text.trim();
+    int? hosts = int.tryParse(hostsController.text.trim());
+    int? numSubnets = int.tryParse(subnetsController.text.trim());
 
-    String baseIp = networkController.text.trim();
- 
-    // 1. Validate the IP address
-
-    if (!isValidIP(baseIp)) {
+    if (!isValidIP(ip) || hosts == null || hosts <= 0 || numSubnets == null || numSubnets <= 0) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Invalid Base Network Address")),
-      );
-      return;
-    }
-    
-    int? requiredHosts = int.tryParse(hostController.text);
-    int? subnetCount = int.tryParse(subnetCountController.text);
-
-    if (baseIp.isEmpty ||
-        requiredHosts == null ||
-        subnetCount == null ||
-        requiredHosts <= 0 ||
-        subnetCount <= 0) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text("Please enter valid inputs")),
+        const SnackBar(content: Text("Please enter valid inputs for all fields.")),
       );
       return;
     }
 
-    // Calculate block size
+
     int bits = 0;
-    while ((pow(2, bits) - 2) < requiredHosts) {
+    while ((pow(2, bits) - 2) < hosts) {
       bits++;
     }
-
     int blockSize = pow(2, bits).toInt();
     int usableHosts = blockSize - 2;
 
-    // Split base IP
-    List<String> octets = baseIp.split(".");
-    int baseLastOctet = int.parse(octets[3]);
+    int currentIpInt = ipToInt(ip);
+    List<Map<String, String>> newResults = [];
 
-    for (int i = 0; i < subnetCount; i++) {
-      int networkLast = baseLastOctet + (blockSize * i);
-      int firstHostLast = networkLast + 1;
-      int lastHostLast = networkLast + usableHosts;
-      int broadcastLast = networkLast + blockSize - 1;
+    for (int i = 0; i < numSubnets; i++) {
+      int networkInt = currentIpInt;
+      int firstHostInt = networkInt + 1;
+      int broadcastInt = networkInt + blockSize - 1;
+      int lastHostInt = broadcastInt - 1;
 
-      subnetResults.add({
+      newResults.add({
         "name": "Subnet ${i + 1}",
-        "network": "${octets[0]}.${octets[1]}.${octets[2]}.$networkLast",
+        "network": intToIp(networkInt),
         "usable": usableHosts.toString(),
-        "first": "${octets[0]}.${octets[1]}.${octets[2]}.$firstHostLast",
-        "last": "${octets[0]}.${octets[1]}.${octets[2]}.$lastHostLast",
-        "broadcast":
-            "${octets[0]}.${octets[1]}.${octets[2]}.$broadcastLast",
+        "first": intToIp(firstHostInt),
+        "last": intToIp(lastHostInt),
+        "broadcast": intToIp(broadcastInt),
       });
+
+
+      currentIpInt += blockSize;
     }
 
-    setState(() {});
+    setState(() {
+      results = newResults;
+    });
   }
 
   @override
@@ -99,8 +99,6 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
         padding: const EdgeInsets.all(16),
         child: Column(
           children: [
-
-            // Input Card
             Card(
               elevation: 4,
               child: Padding(
@@ -108,37 +106,34 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
                 child: Column(
                   children: [
                     TextField(
-                      controller: networkController,
+                      controller: baseIpController,
                       decoration: const InputDecoration(
                         labelText: "Base Network Address",
-                        hintText: "e.g. 192.168.1.0",
+                        hintText: "192.168.20.0",
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 12),
-
+                    const SizedBox(height: 16),
                     TextField(
-                      controller: hostController,
+                      controller: hostsController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: "Hosts per Subnet",
-                        hintText: "e.g. 50",
+                        hintText: "15",
                         border: OutlineInputBorder(),
                       ),
                     ),
-                    const SizedBox(height: 12),
-
+                    const SizedBox(height: 16),
                     TextField(
-                      controller: subnetCountController,
+                      controller: subnetsController,
                       keyboardType: TextInputType.number,
                       decoration: const InputDecoration(
                         labelText: "Number of Subnets",
-                        hintText: "e.g. 5",
+                        hintText: "12",
                         border: OutlineInputBorder(),
                       ),
                     ),
                     const SizedBox(height: 20),
-
                     SizedBox(
                       width: double.infinity,
                       child: ElevatedButton(
@@ -150,13 +145,10 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
                 ),
               ),
             ),
-
-            const SizedBox(height: 25),
-
-            // Result Table
-            if (subnetResults.isNotEmpty)
+            const SizedBox(height: 20),
+            if (results.isNotEmpty)
               Card(
-                elevation: 5,
+                elevation: 4,
                 child: SingleChildScrollView(
                   scrollDirection: Axis.horizontal,
                   child: DataTable(
@@ -168,20 +160,14 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
                       DataColumn(label: Text("Last ID")),
                       DataColumn(label: Text("Broadcast ID")),
                     ],
-                    rows: subnetResults
-                        .map(
-                          (subnet) => DataRow(
-                            cells: [
-                              DataCell(Text(subnet["name"]!)),
-                              DataCell(Text(subnet["network"]!)),
-                              DataCell(Text(subnet["usable"]!)),
-                              DataCell(Text(subnet["first"]!)),
-                              DataCell(Text(subnet["last"]!)),
-                              DataCell(Text(subnet["broadcast"]!)),
-                            ],
-                          ),
-                        )
-                        .toList(),
+                    rows: results.map((r) => DataRow(cells: [
+                      DataCell(Text(r["name"]!)),
+                      DataCell(Text(r["network"]!)),
+                      DataCell(Text(r["usable"]!)),
+                      DataCell(Text(r["first"]!)),
+                      DataCell(Text(r["last"]!)),
+                      DataCell(Text(r["broadcast"]!)),
+                    ])).toList(),
                   ),
                 ),
               ),
