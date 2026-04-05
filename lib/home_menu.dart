@@ -1,25 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'main.dart'; 
-import 'login_page.dart';
 import 'find_class.dart';
 import 'cidr_page.dart';
 import 'vlsm_page.dart';
-import 'static_subnet_page.dart'; 
+import 'static_subnet_page.dart';
+
 class HomeMenu extends StatelessWidget {
   const HomeMenu({super.key});
-
-
-  void logout(BuildContext context) async {
-    await supabase.auth.signOut();
-    if (context.mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(builder: (context) => const LoginPage()),
-      );
-    }
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -28,22 +16,15 @@ class HomeMenu extends StatelessWidget {
 
     return Scaffold(
       appBar: AppBar(
-        title: const Text("NetCalc Dashboard"),
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.logout),
-            onPressed: () => logout(context),
-            tooltip: "Logout",
-          )
-        ],
+        automaticallyImplyLeading: false,
+        title: const Text("Info & Tools"),
+        centerTitle: true,
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-
-           
             const SizedBox(height: 20),
             Center(
               child: Column(
@@ -56,44 +37,42 @@ class HomeMenu extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   const Text(
-                    "Select a networking tool to get started.",
+                    "Select a networking tool below to start.",
                     style: TextStyle(fontSize: 16, color: Colors.grey),
                   ),
                 ],
               ),
             ),
-            
-            const SizedBox(height: 40),
-          
+            const SizedBox(height: 30),
             Expanded(
               child: ListView(
                 children: [
                   _buildMenuCard(
-                    context, 
+                    context,
                     "IP Class Finder", 
                     "Identify Class A, B, C, D, E networks", 
-                    Icons.class_, 
+                    Icons.class_,
                     const FindClassPage()
                   ),
                   _buildMenuCard(
-                    context, 
+                    context,
                     "Static Subnetting", 
                     "Divide a network into equal-sized subnets", 
-                    Icons.grid_view, 
+                    Icons.grid_view,
                     const StaticSubnetPage()
                   ),
                   _buildMenuCard(
-                    context, 
+                    context,
                     "CIDR Calculator", 
                     "Calculate subnets using CIDR notation", 
-                    Icons.calculate, 
+                    Icons.calculate,
                     const CidrPage()
                   ),
                   _buildMenuCard(
-                    context, 
+                    context,
                     "VLSM Planner", 
                     "Advanced Variable Length Subnet Masking", 
-                    Icons.lan, 
+                    Icons.lan,
                     const VlsmPage()
                   ),
                 ],
@@ -105,7 +84,7 @@ class HomeMenu extends StatelessWidget {
     );
   }
 
-  Widget _buildMenuCard(BuildContext context, String title, String subtitle, IconData icon, Widget destinationPage) {
+  Widget _buildMenuCard(BuildContext context, String title, String subtitle, IconData icon, Widget destination) {
     return Card(
       elevation: 4,
       margin: const EdgeInsets.only(bottom: 16),
@@ -113,7 +92,7 @@ class HomeMenu extends StatelessWidget {
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => destinationPage));
+          Navigator.push(context, MaterialPageRoute(builder: (context) => destination));
         },
         child: Padding(
           padding: const EdgeInsets.all(16.0),
@@ -135,7 +114,7 @@ class HomeMenu extends StatelessWidget {
                   ],
                 ),
               ),
-              const Icon(Icons.arrow_forward_ios, color: Colors.grey),
+              const Icon(Icons.arrow_forward_ios, color: Colors.grey)
             ],
           ),
         ),

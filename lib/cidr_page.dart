@@ -50,7 +50,6 @@ class _CidrPageState extends State<CidrPage> {
     return (1 << (32 - cidr)) - 2;
   }
 
-
   bool isValidIP(String ip) {
     List<String> parts = ip.split('.');
     if (parts.length != 4) return false;
@@ -62,9 +61,7 @@ class _CidrPageState extends State<CidrPage> {
     return true;
   }
 
- 
   void calculateCidr() {
-  
     if (ipController.text.isEmpty || !isValidIP(ipController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Enter a valid IP (e.g. 192.168.1.1)")),
@@ -73,9 +70,9 @@ class _CidrPageState extends State<CidrPage> {
     }
 
     if (cidrController.text.isEmpty) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(const SnackBar(content: Text("Please enter CIDR")));
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text("Please enter CIDR")),
+      );
       return;
     }
 
@@ -108,6 +105,10 @@ Usable Hosts  : ${usableHosts(cidr)}
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text("CIDR Notation Calculator"),
         centerTitle: true,
       ),
@@ -147,9 +148,7 @@ Usable Hosts  : ${usableHosts(cidr)}
                 ),
               ),
             ),
-
             const SizedBox(height: 20),
-
             Card(
               color: Colors.blue.shade50,
               elevation: 4,

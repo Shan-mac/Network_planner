@@ -32,7 +32,6 @@ class _FindClassPageState extends State<FindClassPage> {
       return;
     }
 
-
     List<String> parts = ip.split('.');
     int firstOctet = int.parse(parts[0]);
     String ipClass = "";
@@ -69,6 +68,10 @@ class _FindClassPageState extends State<FindClassPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text("Find IP Class"),
         centerTitle: true,
       ),

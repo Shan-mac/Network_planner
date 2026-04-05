@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'main.dart'; 
 import 'register_page.dart';
-import 'home_menu.dart'; 
+import 'dashboard.dart'; 
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -31,7 +30,6 @@ class _LoginPageState extends State<LoginPage> {
     setState(() => _isLoading = true);
 
     try {
-    
       await supabase.auth.signInWithPassword(
         email: '$username@netcalc.local',
         password: password,
@@ -40,14 +38,14 @@ class _LoginPageState extends State<LoginPage> {
       if (mounted) {
         Navigator.pushReplacement(
           context,
-          MaterialPageRoute(builder: (context) => const HomeMenu()),
+          MaterialPageRoute(builder: (context) => const Dashboard()),
         );
       }
-    } on AuthException catch (e) {
+    } on AuthException catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Invalid username or password.")),
       );
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("An unexpected error occurred.")),
       );

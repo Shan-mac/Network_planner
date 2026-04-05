@@ -20,7 +20,6 @@ class _RegisterPageState extends State<RegisterPage> {
     String password = _passwordController.text.trim();
     String confirmPassword = _confirmPasswordController.text.trim();
 
-  
     if (username.isEmpty || password.isEmpty || confirmPassword.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Please fill in all fields")),
@@ -28,7 +27,6 @@ class _RegisterPageState extends State<RegisterPage> {
       return;
     }
 
-   
     if (password != confirmPassword) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Passwords do not match!")),
@@ -39,7 +37,6 @@ class _RegisterPageState extends State<RegisterPage> {
     setState(() => _isLoading = true);
 
     try {
-   
       await supabase.auth.signUp(
         email: '$username@netcalc.local',
         password: password,
@@ -49,11 +46,9 @@ class _RegisterPageState extends State<RegisterPage> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Registration successful!")),
         );
-     
         Navigator.pop(context);
       }
     } on AuthException catch (e) {
-      
       if (e.message.contains("already registered")) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text("Username is already taken.")),
@@ -63,7 +58,7 @@ class _RegisterPageState extends State<RegisterPage> {
           SnackBar(content: Text(e.message)),
         );
       }
-    } catch (e) {
+    } catch (_) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("An unexpected error occurred.")),
       );
@@ -75,7 +70,13 @@ class _RegisterPageState extends State<RegisterPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text("Create Account")),
+      appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text("Create Account"),
+      ),
       body: Center(
         child: SingleChildScrollView(
           padding: const EdgeInsets.all(24),

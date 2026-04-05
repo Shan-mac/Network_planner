@@ -1,11 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
-
 import 'login_page.dart';
-import 'home_menu.dart'; 
+import 'dashboard.dart'; 
+
+final ValueNotifier<ThemeMode> themeNotifier = ValueNotifier(ThemeMode.light);
+
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  
   
   await Supabase.initialize(
     url: 'https://lhkctdwhorodqfnnoahj.supabase.co',
@@ -22,23 +23,46 @@ class NetCalcApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NetCalc Toolkit',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: Colors.blueAccent),
-        useMaterial3: true,
-        appBarTheme: const AppBarTheme(
-          elevation: 0,
-          centerTitle: true,
-          backgroundColor: Colors.blueAccent,
-          foregroundColor: Colors.white,
-        ),
-      ),
- 
-      home: supabase.auth.currentSession == null 
-          ? const LoginPage() 
-          : const HomeMenu(),
+    return ValueListenableBuilder<ThemeMode>(
+      valueListenable: themeNotifier,
+      builder: (_, ThemeMode currentMode, __) {
+        return MaterialApp(
+          title: 'NetCalc Toolkit',
+          debugShowCheckedModeBanner: false,
+          themeMode: currentMode,
+          theme: ThemeData(
+            brightness: Brightness.light,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blueAccent, 
+              brightness: Brightness.light
+            ),
+            useMaterial3: true,
+            appBarTheme: const AppBarTheme(
+              elevation: 0,
+              centerTitle: true,
+              backgroundColor: Colors.blueAccent,
+              foregroundColor: Colors.white,
+            ),
+          ),
+          darkTheme: ThemeData(
+            brightness: Brightness.dark,
+            colorScheme: ColorScheme.fromSeed(
+              seedColor: Colors.blueAccent, 
+              brightness: Brightness.dark
+            ),
+            useMaterial3: true,
+            appBarTheme: AppBarTheme(
+              elevation: 0,
+              centerTitle: true,
+              backgroundColor: Colors.grey[900],
+              foregroundColor: Colors.white,
+            ),
+          ),
+          home: supabase.auth.currentSession == null 
+              ? const LoginPage() 
+              : const Dashboard(),
+        );
+      },
     );
   }
 }

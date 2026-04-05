@@ -16,7 +16,6 @@ class _VlsmPageState extends State<VlsmPage> {
   List<Map<String, dynamic>> subnetInputs = [];
   List<Map<String, String>> results = [];
 
-  
   int ipToInt(String ip) {
     List<int> o = ip.split('.').map(int.parse).toList();
     return (o[0] * 16777216) + (o[1] * 65536) + (o[2] * 256) + o[3];
@@ -29,7 +28,6 @@ class _VlsmPageState extends State<VlsmPage> {
     int o4 = ipInt % 256;
     return '$o1.$o2.$o3.$o4';
   }
-
 
   bool isValidIP(String ip) {
     List<String> parts = ip.split('.');
@@ -75,7 +73,6 @@ class _VlsmPageState extends State<VlsmPage> {
   void calculateVLSM() {
     results.clear();
 
-
     if (!isValidIP(baseIpController.text)) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text("Invalid Base IP Address")),
@@ -90,14 +87,12 @@ class _VlsmPageState extends State<VlsmPage> {
       return;
     }
 
-
     subnetInputs.sort((a, b) => b["hosts"].compareTo(a["hosts"]));
 
     int currentIpInt = ipToInt(baseIpController.text.trim());
 
     for (var subnet in subnetInputs) {
       int hosts = subnet["hosts"];
-
 
       int bits = 0;
       while ((pow(2, bits) - 2) < hosts) {
@@ -121,7 +116,6 @@ class _VlsmPageState extends State<VlsmPage> {
         "broadcast": intToIp(broadcastInt),
       });
 
-  
       currentIpInt += blockSize;
     }
 
@@ -132,6 +126,10 @@ class _VlsmPageState extends State<VlsmPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text("VLSM Calculation"),
         centerTitle: true,
       ),
@@ -195,8 +193,6 @@ class _VlsmPageState extends State<VlsmPage> {
               ),
             ),
             const SizedBox(height: 10),
-            
-           
             if (subnetInputs.isNotEmpty)
               Card(
                 elevation: 2,
@@ -212,10 +208,7 @@ class _VlsmPageState extends State<VlsmPage> {
                   }).toList(),
                 ),
               ),
-            
             const SizedBox(height: 16),
-            
-          
             Row(
               children: [
                 Expanded(
@@ -234,10 +227,7 @@ class _VlsmPageState extends State<VlsmPage> {
                 ),
               ],
             ),
-            
             const SizedBox(height: 25),
-            
-       
             if (results.isNotEmpty)
               Card(
                 elevation: 4,

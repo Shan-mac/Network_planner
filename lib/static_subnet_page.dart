@@ -15,10 +15,8 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
 
   List<Map<String, String>> results = [];
 
-
   int ipToInt(String ip) {
     List<int> o = ip.split('.').map(int.parse).toList();
-
     return (o[0] * 16777216) + (o[1] * 65536) + (o[2] * 256) + o[3];
   }
 
@@ -53,7 +51,6 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
       return;
     }
 
-
     int bits = 0;
     while ((pow(2, bits) - 2) < hosts) {
       bits++;
@@ -79,7 +76,6 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
         "broadcast": intToIp(broadcastInt),
       });
 
-
       currentIpInt += blockSize;
     }
 
@@ -92,6 +88,10 @@ class _StaticSubnetPageState extends State<StaticSubnetPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
         title: const Text("Static Subnet Calculation"),
         centerTitle: true,
       ),
